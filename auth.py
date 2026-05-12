@@ -25,16 +25,21 @@ def get_creds():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            if os.environ.get("RENDER"):
+            if os.environ.get("RENDER") or os.environ.get("RAILWAY_ENVIRONMENT_NAME"):
                 raise Exception("Missing GOOGLE_TOKEN_JSON env var or token is totally invalid.")
             
             # Local flow
             flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
             creds = flow.run_local_server(port=0)
 
-        # Save the refreshed token locally if not on Render
-        if not os.environ.get("RENDER"):
+        # Save the refreshed token locally if not on Render or Railway
+        if not (os.environ.get("RENDER") or os.environ.get("RAILWAY_ENVIRONMENT_NAME")):
             with open("token.json", "w") as token:
                 token.write(creds.to_json())
                 
     return creds
+
+if __name__ == "__main__":
+    print("Initiating authentication flow...")
+    get_creds()
+    print("\n✅ Authentication successful! token.json has been created.")
